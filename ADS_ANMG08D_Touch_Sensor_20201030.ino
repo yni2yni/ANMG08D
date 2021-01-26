@@ -1,10 +1,11 @@
 // ADS Touch Sensor Test Example Program (IC P/N:ANMG08D )
 // Code:
-// Date: 2020.10.30  Ver.: 0.0.2
+// Date: 2021.01.26  Ver.: 0.0.4
 // H/W Target: ARDUINO UNO R3, S/W: Arduino IDE  1.8.13
 // Author: Park, Byoungbae (yni2yni@hanmail.net)
 // Note: More information? Please ,send to e-mail.
 // Uno R3, A4:SDA,A5: SCL, Leonardo 2:SDA,3:SCL, Nano V3.0  A4:SDA,A5:SCL
+// Register setting values are subject to change without prior notice to improve touch operation.
 
 #include <Wire.h>
 
@@ -126,13 +127,13 @@ void loop() {
 
    Wire.beginTransmission(ANMG08D_ID); // sned ic slave address
    Wire.write(byte(Output));           // sends register address
-   //Wire.endTransmission();             // stop transmitting
+   Wire.endTransmission();             // stop transmitting
    Wire.requestFrom(ANMG08D_ID, 1);    // key data read (1 byte)
    while ( Wire.available() )
     {
       read_data[0] = Wire.read();
    }
-   Wire.endTransmission(); //
+   //Wire.endTransmission(); // I2C Stop
 
    Serial.write(10);
    Serial.print("-------Touch Sensor Output Data  ---- > "); // Test Code
@@ -232,15 +233,16 @@ void  Init_ANMG08D(void)
 //Wire.write(byte(0x88));  //0x12h
 //Change the value of the register 0x12h when a problem occurs due to voltage drop
    Wire.write(byte(0x92)); //0x13h
-   Wire.write(byte(0x83)); //0x14h
-   //IC Reset Value: 0x83 (3ch) -> 0x87(7ch)
+   Wire.write(byte(0x86)); //0x14h
+//IC Reset Value: 0x83 (3ch) -> 0x86(6ch) , -% Hold Channel 3ch -> 6ch
+// Set when there is a possibility of touching multiple touch pads due to the narrow spacing of the touch keypad.
    Wire.write(byte(0x73)); //0x15h
    Wire.write(byte(0x64)); //0x16h
    Wire.write(byte(0xFF)); //0x17h 
    Wire.write(byte(0x2B)); //0x18h  
    Wire.write(byte(0x11)); //0x19h
    Wire.write(byte(0x03)); //0x1Ah 
-   // IC Reset Value: 0x01 ->0x03 (Init Fast, Up Fast, Down Slow)
+   // IC Reset Value: 0x00 ->0x03 (Init Fast Cal., Up Fast, Down Slow)
    Wire.write(byte(0xFF)); //0x1Bh  
    Wire.endTransmission(); //  
 
@@ -253,7 +255,7 @@ void  Init_ANMG08D(void)
    Wire.write(byte(0x35)); // address
    Wire.write(byte(0xC0)); //
    //IC Reset Value = 0xC0 (Sensing Frequency Low) -> 0x40 (Sensing Frequency High)
-   // Change the value to improve the noise.
+   // Change the value to improve the Low-Frequency-Noise.
    Wire.endTransmission(); //   
 
    Wire.beginTransmission(ANMG08D_ID);// 
@@ -430,7 +432,7 @@ void  Init_ANMG08D(void)
    Wire.write(byte(Dtr_Ctrl2));        // 0x6Ch
    Wire.write(0x00);
    // Set the Touch Percent Limit. 
-   // ( 0x16h~0x6C Value = 0x004E= 78 ) / (0x47h value 0x0D = 13 )  x 0.4% = (-)2.4% 
+   // ( 0x6Bh~0x6C Value = 0x004E= 78 ) / (0x47h value 0x0D = 13 )  x 0.4% = (-)2.4% 
    Wire.endTransmission(); //
 
    Wire.beginTransmission(ANMG08D_ID); //
